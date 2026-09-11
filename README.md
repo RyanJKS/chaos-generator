@@ -1,29 +1,46 @@
 # Chaos Generator
 
-An app that generates chaos traffic to try and break down system
+A simple Streamlit app for sending controlled HTTP event traffic to another system.
+Choose an event rate, destination URL, and real-time, batch, or micro-batch mode.
+Start and stop traffic while watching delivery and error counters.
 
 ## Getting started
 
-Use Python 3.12. Create a virtual environment and install the development tools:
+Install Python 3.12+ and [uv](https://docs.astral.sh/uv/getting-started/installation/).
+From the repository root:
 
 ```sh
-python -m venv .venv
-source .venv/bin/activate
-python -m pip install -r requirements-dev.txt
-pre-commit install
-python src/main.py
+uv sync --locked
+uv run streamlit run src/main.py
 ```
 
-On Windows PowerShell, activate with `.venv\Scripts\Activate.ps1` instead.
+Open http://localhost:8501. Enter an HTTP endpoint that accepts JSON POST requests,
+choose the controls, and click **Start**. Click **Stop** before closing the tab.
+See [usage and payload details](docs/index.md).
+
+## Example receiver
+
+With [just](https://just.systems/) installed, run the FastAPI receiver:
+
+```sh
+just receiver
+```
+
+In another terminal, run `just run`. Set the destination to
+`http://127.0.0.1:8000/events`. Open `http://127.0.0.1:8000/stats` to see received
+request and event counts. Stop either server with Ctrl+C.
+See [receiver hosting and endpoints](docs/index.md#example-fastapi-receiver).
 
 ## Checks
 
 ```sh
-pre-commit run --all-files
-python -m compileall -q src
+uv run pre-commit install
+uv run pre-commit run --all-files
+uv run python -m unittest discover -s tests -v
+uv run python -m compileall -q src tests
 ```
 
-CI runs these checks on pushes to `main` and pull requests. Compilation checks syntax; add behavior tests as the application grows.
+CI runs these checks on pushes to `main` and pull requests. Tests cover payloads, pacing, failures, lifecycle, and Streamlit controls.
 
 ## Layout
 
@@ -40,7 +57,6 @@ See [CONTRIBUTING.md](CONTRIBUTING.md) for contribution guidance and [SECURITY.m
 - Configure branch protection or rulesets and require the `Checks` CI job.
 - Enable private vulnerability reporting where available.
 - Select a license before distributing the code.
-- Replace the starter architecture notes and document any runtime configuration.
 
 ## Releases
 
