@@ -2,6 +2,7 @@ site_name: "Chaos Generator"
 site_description: "Controlled HTTP event traffic for observing systems under load"
 nav:
   - Home: index.md
+  - Containers and Kubernetes: containers.md
   - Architecture: architecture.md
 plugins:
   - techdocs-core

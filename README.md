@@ -18,6 +18,34 @@ Open http://localhost:8501. Enter an HTTP endpoint that accepts JSON POST reques
 choose the controls, and click **Start**. Click **Stop** before closing the tab.
 See [usage and payload details](docs/index.md).
 
+## Docker
+
+Build and run with Docker:
+
+```sh
+docker build -t chaos-generator:local .
+docker run --rm -p 8501:8501 chaos-generator:local
+```
+
+Open http://localhost:8501. See [container operation and Kubernetes probes](docs/containers.md).
+
+## Docker Hub
+
+Pushing to docker hub
+Create proper tag
+```sh
+docker build -t chaos-generator:v1
+```
+
+Tag remote repo
+```sh
+docker tag chaos-generator:v1 <namespace>/<repo_name>:<tag>
+```
+Push new image
+```sh
+docker push <namespace>/<repo_name>:<tag>
+```
+
 ## Example receiver
 
 With [just](https://just.systems/) installed, run the FastAPI receiver:

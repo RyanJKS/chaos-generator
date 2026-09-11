@@ -19,6 +19,8 @@ Enter its full HTTP or HTTPS URL, choose the load settings, and click **Start**.
 Controls lock during a run. Click **Stop** to change them and start a new run.
 Counters reset on each Start. No destination is contacted before Start.
 
+For Docker builds and Kubernetes health checks, see [Containers and Kubernetes](containers.md).
+
 ## Example FastAPI receiver
 
 The included receiver accepts both single events and event arrays. Install
