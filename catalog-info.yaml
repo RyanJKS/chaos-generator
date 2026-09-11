@@ -1,0 +1,12 @@
+apiVersion: backstage.io/v1alpha1
+kind: Component
+metadata:
+  name: "chaos-generator"
+  title: "Chaos Generator"
+  annotations:
+    backstage.io/techdocs-ref: dir:.
+  description: "An app that generates chaos traffic to try and break down system"
+spec:
+  type: service
+  lifecycle: experimental
+  owner: "user:default/ryanjks"

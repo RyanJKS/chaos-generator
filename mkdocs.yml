@@ -1,0 +1,7 @@
+site_name: "Chaos Generator"
+site_description: "An app that generates chaos traffic to try and break down system"
+nav:
+  - Home: index.md
+  - Architecture: architecture.md
+plugins:
+  - techdocs-core
