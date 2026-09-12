@@ -5,7 +5,14 @@ Main documentation: https://github.com/argoproj/argo-helm/tree/main/charts/argo-
 ## Adding helm repo - Argo CD
 
 ```sh
+helm repo add <repo-name> <url>
 helm repo add argo https://argoproj.github.io/argo-helm
+```
+
+Check if repo was installed
+
+```sh
+helm repo list
 ```
 
 ## Install release
