@@ -4,6 +4,10 @@ Generate controlled HTTP event traffic and observe how another system behaves un
 The app provides a destination URL, an events/second slider, streaming mode, request
 interval, Start and Stop buttons, and live delivery counters.
 
+For repeatable Kubernetes-based CI infrastructure, see the
+[self-hosted runner guides](local/self_hosted_gh_runners.md), with separate local
+and production walkthroughs using kubectl and Helm.
+
 ## Run locally
 
 Install Python 3.12+ and [uv](https://docs.astral.sh/uv/getting-started/installation/).
