@@ -3,7 +3,7 @@ import streamlit as st
 from generator import RunConfig, TrafficRunner
 
 st.set_page_config(page_title="Chaos Generator", page_icon="🌪️")
-st.title(":fire: Chaos Generator")
+st.title(":fire: Chaos Generator :fire:")
 st.caption("Control the chaos. See how your system handles event traffic.")
 
 if "runner" not in st.session_state:

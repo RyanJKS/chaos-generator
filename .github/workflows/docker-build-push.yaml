@@ -40,10 +40,29 @@ jobs:
         with:
           push: true
           tags: ${{ secrets.DOCKERHUB_USERNAME }}/chaos-generator:${{ env.sha_short }}
+    outputs:
+      commit_id: ${{ env.sha_short }}
+
   cd:
     needs: ci
     runs-on: self-hosted
     steps:
+      - name: Check out repository
+        uses: actions/checkout@v4
+
+      - name: Update k8s manifest
+        shell: bash
+        run: |
+          echo ${{ needs.ci.outputs.commit_id }}
+          pip install yq
+
+          yq -Yi '.image.tag = "${{ needs.ci.outputs.commit_id }}"' infrastructure/k8s/charts/chaos-generator-app/values.yaml
+
+      - name: Commit changes with tag
+        uses: EndBug/add-and-commit@v9
+        with:
+          message: "Update values.yaml with commit ${{ needs.ci.outputs.commit_id }}"
+
       - name: Install ArgoCD within k8s
         shell: bash
         run: |
