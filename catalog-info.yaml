@@ -5,7 +5,7 @@ metadata:
   title: "Chaos Generator"
   annotations:
     backstage.io/techdocs-ref: dir:.
-  description: "An app that generates chaos traffic to try and break down system"
+  description: "Controlled HTTP event traffic for observing systems under load"
 spec:
   type: service
   lifecycle: experimental

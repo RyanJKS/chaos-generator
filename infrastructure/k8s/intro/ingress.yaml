@@ -1,0 +1,17 @@
+apiVersion: networking.k8s.io/v1
+kind: Ingress
+metadata:
+  name: chaos-generator
+spec:
+  ingressClassName: nginx
+  rules:
+  # - host: site.local
+  - http:
+      paths:
+      - path: /
+        pathType: Prefix
+        backend:
+          service:
+            name: chaos-generator
+            port:
+              number: 8501 # service port -> to access from machine

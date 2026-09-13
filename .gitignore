@@ -37,3 +37,7 @@ Thumbs.db
 *.tfvars.json
 !*.example.tfvars
 crash.log
+
+# Generated documentation
+site/
+.serena/
