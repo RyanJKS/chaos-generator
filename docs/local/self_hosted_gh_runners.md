@@ -223,3 +223,38 @@ The self-hosted-runners-* should appear on the github repo that was registered h
 <div align="center">
   <img src="../assets/runner-verify.PNG" alt="runner-verify-github">
 </div>
+
+## Step 6: Run commands inside runners
+
+Exec into self hosted runner pod
+```sh
+kubectl exec -ti self-hosted-runners-p8lxt-xn75c -n actions-runner-system -- sh
+```
+
+## Step 7: Connect argocd server to endpoint
+
+Get the services for argocd
+```sh
+kubectl get svc -n argocd
+```
+
+Output:
+
+```sh
+NAME                               TYPE        CLUSTER-IP      EXTERNAL-IP   PORT(S)             AGE
+argocd-applicationset-controller   ClusterIP   10.96.225.66    <none>        7000/TCP            16h
+argocd-dex-server                  ClusterIP   10.96.222.115   <none>        5556/TCP,5557/TCP   16h
+argocd-redis                       ClusterIP   10.96.29.231    <none>        6379/TCP            16h
+argocd-repo-server                 ClusterIP   10.96.55.137    <none>        8081/TCP            16h
+argocd-server                      ClusterIP   10.96.55.24     <none>        80/TCP,443/TCP      16h
+```
+
+Exec into the runner's pod from [#Step 6](#step-6-run-commands-inside-runners) and check the connection to the argocd which is in a **different namespace**
+
+```sh
+curl https://<argocd server svc name>.<namespace server>
+
+curl -k https://argocd-server.argocd
+```
+
+This is the endpoint `argocd-server.argocd` to login from argocd cli in github actions workflows

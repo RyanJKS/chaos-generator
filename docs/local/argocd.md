@@ -105,3 +105,15 @@ argocd login localhost:8080 --insecure --grpc-web \
 --password "$(kubectl -n argocd get secret argocd-initial-admin-secret \
     -o jsonpath='{.data.password}' | base64 -d)"
 ```
+
+Check if you can see the apps
+
+```sh
+argocd app list
+```
+
+Sync an app
+
+```sh
+argocd app sync <app-name>
+```
