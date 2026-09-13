@@ -25,6 +25,11 @@ container itself; in Kubernetes, use the destination Service's DNS name.
 
 ## CI manifest updates
 
+The `cd` job grants its `GITHUB_TOKEN` `contents: write` so it can push the
+updated image tag. Other jobs retain the workflow's `contents: read` permission.
+This grant does not bypass branch protection or repository rulesets; if direct
+pushes are blocked, submit the manifest change through the required pull-request flow.
+
 The `cd` job in `docker-build-push.yaml` installs the pinned Mike Farah `yq`
 binary into the runner's temporary directory and adds it to the job's PATH.
 This step requires a Linux x64 runner, `curl`, and access to GitHub release downloads;
