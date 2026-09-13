@@ -13,8 +13,5 @@ spec:
     server: https://kubernetes.default.svc
     namespace: chaos-generator-prod-ns
   syncPolicy:
-    automated:
-      prune: true
-      selfHeal: true
     syncOptions:
       - CreateNamespace=true

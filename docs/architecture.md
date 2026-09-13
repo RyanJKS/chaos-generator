@@ -82,11 +82,13 @@ Applications for that namespace. `examples/intro/` contains standalone learning
 manifests outside the active deployment path.
 
 The image publishing workflow updates `apps/chaos-generator/chart/values.yaml`
-under `infrastructure/k8s/`. Manual runs select `dev`, `prod`, or `helm`; push runs
-select dev. The CD job upserts the selected Application manifest before syncing
-its name, keeping the live source path aligned with the repository. Both overlays
-inherit the shared chart image tag, so automated sync can update both environments
-when that tag changes. The selection does not isolate production image promotion.
+under `infrastructure/k8s/`. Both push and manual runs deploy only the direct
+Helm Application from `argocd/applications/chaos-app.yaml`. The CD job upserts it
+before syncing its name, keeping the live source path aligned with the repository.
+Kustomize dev/prod are learning examples for local rendering/application or manual
+Argo CD sync. Their Application manifests disable automated sync, and the pipeline
+does not deploy them. Both overlays inherit the shared chart image tag when
+manually rendered or synced.
 See the [Argo CD setup guide](local/argocd.md#helm-chart-with-kustomize-overlays)
 for build flags, local validation, and applying the Application.
 
