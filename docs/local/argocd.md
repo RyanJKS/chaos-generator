@@ -52,6 +52,16 @@ Update the hosts file from `C:\Windows\System32\drivers\etc\hosts` from notepad 
 127.0.0.1       argocd.test.com
 ```
 
+Or if you are on WSL/Linux
+
+Add this to `/etc/hosts` on the machine running argocd:
+
+```sh
+127.0.0.1       argocd.test.com
+```
+
+which is: <INGRESS_IP> argocd.test.com
+
 ## Get Secret
 
 ```sh
@@ -60,6 +70,50 @@ kubectl get secrets -n argocd argocd-initial-admin-secret -o yaml
 ```
 
 Extract data.password and base64 decode
+
 ```sh
 kubectl get secret argocd-initial-admin-secret -n argocd -o yaml | yq ".data.password" | base64 -d
+```
+
+## ArgoCD CLI
+
+Connect to argocd using cli if using the hack above to have an endpoint
+
+```sh
+argocd login argocd.test.com --insecure --grpc-web --username admin --password $(kubectl get secret argocd-initial-admin-secret -n argocd -o yaml | yq ".data.password" | base64 -d)
+```
+
+Output:
+
+```sh
+'admin:login' logged in successfully
+Context 'argocd.test.com' updated
+```
+
+Else: Use 127.0.0.1 only if the ingress is exposed on that machine. A Windows hosts entry won’t necessarily apply to a CLI running inside Linux or WSL.
+To log in immediately using port forwarding, run:
+
+```sh
+kubectl -n argocd port-forward svc/argocd-server 8080:443
+```
+
+Then, in another terminal:
+
+```sh
+argocd login localhost:8080 --insecure --grpc-web \
+--username admin \
+--password "$(kubectl -n argocd get secret argocd-initial-admin-secret \
+    -o jsonpath='{.data.password}' | base64 -d)"
+```
+
+Check if you can see the apps
+
+```sh
+argocd app list
+```
+
+Sync an app
+
+```sh
+argocd app sync <app-name>
 ```

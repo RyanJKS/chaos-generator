@@ -4,5 +4,9 @@ nav:
   - Home: index.md
   - Containers and Kubernetes: containers.md
   - Architecture: architecture.md
+  - Self-hosted runners:
+      - Setup: local/self_hosted_gh_runners.md
+  - Local setup:
+      - KIND cluster: local/kind-setup.md
 plugins:
   - techdocs-core

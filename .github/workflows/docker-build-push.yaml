@@ -1,4 +1,4 @@
-name: docker-build-push
+name: ci-cd
 
 on:
   workflow_dispatch:
@@ -16,13 +16,18 @@ on:
 permissions:
   contents: read
 jobs:
-  docker:
+  ci:
     runs-on: ubuntu-latest
     steps:
       - name: Check out repository
         uses: actions/checkout@v4
         with:
           persist-credentials: false
+
+      - name: Declare gh env variables
+        shell: bash
+        run: |
+          echo "sha_short=${GITHUB_SHA::6}" >> "$GITHUB_ENV"
 
       - name: Login to Docker Hub
         uses: docker/login-action@v4
@@ -34,4 +39,28 @@ jobs:
         uses: docker/build-push-action@v7
         with:
           push: true
-          tags: ${{ secrets.DOCKERHUB_USERNAME }}/chaos-generator:${{ github.sha }}
+          tags: ${{ secrets.DOCKERHUB_USERNAME }}/chaos-generator:${{ env.sha_short }}
+  cd:
+    needs: ci
+    runs-on: self-hosted
+    steps:
+      - name: Install ArgoCD within k8s
+        shell: bash
+        run: |
+          curl -k -sSL -o argocd https://argocd-server.argocd/download/argocd-linux-amd64
+          chmod +x argocd
+          sudo mv ./argocd /usr/local/bin/argocd
+
+      - name: ArgoCD Login
+        shell: bash
+        run: |
+          argocd login argocd-server.argocd \
+            --insecure \
+            --grpc-web \
+            --username admin \
+            --password ${{ secrets.ARGOCD_PASSWORD }}
+
+      - name: ArgoCD app sync
+        shell: bash
+        run: |
+          argocd app sync chaos-generator
