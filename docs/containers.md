@@ -23,6 +23,14 @@ The default command starts the generator, not the example receiver.
 Use a destination reachable from the container. `localhost` refers to the
 container itself; in Kubernetes, use the destination Service's DNS name.
 
+## CI manifest updates
+
+The `cd` job in `docker-build-push.yaml` installs the pinned Mike Farah `yq`
+binary into the runner's temporary directory and adds it to the job's PATH.
+This step requires a Linux x64 runner, `curl`, and access to GitHub release downloads;
+it does not require pip or sudo. The manifest update uses `strenv(IMAGE_TAG)` to
+keep the image tag a YAML string, including tags containing only digits.
+
 ## Health checks
 
 Streamlit provides `GET /_stcore/health` on port 8501. A ready server responds

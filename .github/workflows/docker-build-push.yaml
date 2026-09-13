@@ -50,13 +50,25 @@ jobs:
       - name: Check out repository
         uses: actions/checkout@v4
 
+      - name: Install yq
+        shell: bash
+        env:
+          YQ_VERSION: v4.44.3
+        run: |
+          mkdir -p "$RUNNER_TEMP/yq-bin"
+          curl --fail --silent --show-error --location \
+            "https://github.com/mikefarah/yq/releases/download/${YQ_VERSION}/yq_linux_amd64" \
+            --output "$RUNNER_TEMP/yq-bin/yq"
+          chmod +x "$RUNNER_TEMP/yq-bin/yq"
+          echo "$RUNNER_TEMP/yq-bin" >> "$GITHUB_PATH"
+          "$RUNNER_TEMP/yq-bin/yq" --version
+
       - name: Update k8s manifest
         shell: bash
+        env:
+          IMAGE_TAG: ${{ needs.ci.outputs.commit_id }}
         run: |
-          echo ${{ needs.ci.outputs.commit_id }}
-          pip install yq
-
-          yq -Yi '.image.tag = "${{ needs.ci.outputs.commit_id }}"' infrastructure/k8s/charts/chaos-generator-app/values.yaml
+          yq -i '.image.tag = strenv(IMAGE_TAG)' infrastructure/k8s/charts/chaos-generator-app/values.yaml
 
       - name: Commit changes with tag
         uses: EndBug/add-and-commit@v9
