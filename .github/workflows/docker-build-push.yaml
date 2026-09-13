@@ -2,6 +2,15 @@ name: ci-cd
 
 on:
   workflow_dispatch:
+    inputs:
+      deployment:
+        description: Argo CD deployment to configure and sync
+        type: choice
+        default: helm
+        options:
+          - dev
+          - prod
+          - helm
   push:
     paths:
       - src/**
@@ -46,11 +55,25 @@ jobs:
   cd:
     needs: ci
     runs-on: self-hosted
+    env:
+      DEPLOYMENT: ${{ inputs.deployment || 'dev' }}
     permissions:
       contents: write
     steps:
       - name: Check out repository
         uses: actions/checkout@v4
+
+      - name: Select ArgoCD Application
+        shell: bash
+        run: |
+          set -euo pipefail
+          case "$DEPLOYMENT" in
+            dev|prod) application_file="infrastructure/k8s/argocd/applications/$DEPLOYMENT/kustomize-app.yaml" ;;
+            helm) application_file="infrastructure/k8s/argocd/applications/chaos-app.yaml" ;;
+            *) echo "Unsupported deployment: $DEPLOYMENT" >&2; exit 1 ;;
+          esac
+          test -f "$application_file"
+          echo "ARGOCD_APPLICATION_FILE=$application_file" >> "$GITHUB_ENV"
 
       - name: Install yq
         shell: bash
@@ -93,7 +116,10 @@ jobs:
             --username admin \
             --password ${{ secrets.ARGOCD_PASSWORD }}
 
-      - name: ArgoCD app sync
+      - name: Update ArgoCD Application and sync
         shell: bash
         run: |
-          argocd app sync chaos-generator
+          set -euo pipefail
+          application_name="$(yq -er '.metadata.name' "$ARGOCD_APPLICATION_FILE")"
+          argocd app create --file "$ARGOCD_APPLICATION_FILE" --upsert
+          argocd app sync "$application_name"

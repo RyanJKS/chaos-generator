@@ -6,3 +6,7 @@ resources:
 
 patches:
   - path: replica-patch.yaml
+  - path: ingress-patch.yaml
+    target:
+      kind: Ingress
+      name: chaos-generator-chaos-generator-app

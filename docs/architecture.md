@@ -71,15 +71,23 @@ helm template chaos-generator infrastructure/k8s/apps/chaos-generator/chart
 Kustomize base and dev/prod overlays together. Each overlay has a
 `replica-patch.yaml`, setting one replica for dev and three for prod.
 `platform/` holds Argo CD Helm values and
-the GitHub runner deployment. `argocd/applications/kustomize-app.yaml` points to
-the dev overlay and is the option used in the setup guide. `chaos-app.yaml` in
-the same directory is a direct Helm alternative. Both define the same Argo CD
-Application; apply one at a time. `examples/intro/`
-contains standalone learning manifests, outside the active deployment path.
+the GitHub runner deployment. `argocd/applications/dev/kustomize-app.yaml` and
+`argocd/applications/prod/kustomize-app.yaml` select the corresponding overlays.
+The Applications are `chaos-generator-dev` in destination `chaos-generator-ns`
+and `chaos-generator-prod` in destination `chaos-generator-prod-ns`. Prod patches
+its ingress host to `prod.localhost`; dev uses `localhost`.
+`argocd/applications/chaos-app.yaml` retains the direct Helm alternative named
+`chaos-generator`, targeting the same workloads as dev; use only one of those
+Applications for that namespace. `examples/intro/` contains standalone learning
+manifests outside the active deployment path.
 
 The image publishing workflow updates `apps/chaos-generator/chart/values.yaml`
-under `infrastructure/k8s/`. Kustomize renders that chart before applying overlay
-changes. See the [Argo CD setup guide](local/argocd.md#helm-chart-with-kustomize-overlays)
+under `infrastructure/k8s/`. Manual runs select `dev`, `prod`, or `helm`; push runs
+select dev. The CD job upserts the selected Application manifest before syncing
+its name, keeping the live source path aligned with the repository. Both overlays
+inherit the shared chart image tag, so automated sync can update both environments
+when that tag changes. The selection does not isolate production image promotion.
+See the [Argo CD setup guide](local/argocd.md#helm-chart-with-kustomize-overlays)
 for build flags, local validation, and applying the Application.
 
 ## Documentation

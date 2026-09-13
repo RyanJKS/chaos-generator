@@ -82,11 +82,11 @@ Create it on the UI post login
 
 ### 2: Yaml Config
 The Argo CD `kind: Application` manifest is
-`infrastructure/k8s/argocd/applications/kustomize-app.yaml`. Complete the
+`infrastructure/k8s/argocd/applications/dev/kustomize-app.yaml`. Complete the
 Helm/Kustomize configuration below before applying it from the repository root:
 
 ```sh
-kubectl apply -f infrastructure/k8s/argocd/applications/kustomize-app.yaml
+kubectl apply -f infrastructure/k8s/argocd/applications/dev/kustomize-app.yaml
 ```
 
 ### Helm chart with Kustomize overlays
@@ -106,12 +106,14 @@ infrastructure/k8s/
 │           │   └── replica-patch.yaml # One replica
 │           └── prod/
 │               ├── kustomization.yaml # References ../../base
-│               └── replica-patch.yaml # Three replicas
+│               ├── replica-patch.yaml # Three replicas
+│               └── ingress-patch.yaml # prod.localhost
 ├── platform/
 │   ├── argocd/values.yaml
 │   └── github-runner/runner-deployment.yaml
 ├── argocd/applications/
-│   ├── kustomize-app.yaml           # Helm rendered through Kustomize
+│   ├── dev/kustomize-app.yaml       # Dev overlay
+│   ├── prod/kustomize-app.yaml      # Prod overlay
 │   └── chaos-app.yaml               # Direct Helm alternative
 └── examples/intro/                 # Standalone learning manifests
 ```
@@ -129,8 +131,11 @@ Here `chart` identifies the local directory; `Chart.yaml` still names the chart
 name stays `chaos-generator`, preserving resource names and selectors from the
 direct Helm Application. Each overlay references its own `replica-patch.yaml`:
 dev sets one replica and prod sets three. Add environment patches or image
-overrides to the relevant overlay. Argo CD supplies the destination namespace
-`chaos-generator-ns` and creates it through `CreateNamespace=true`.
+overrides to the relevant overlay. Argo CD supplies each Application's destination namespace and creates it through
+`CreateNamespace=true`: dev uses `chaos-generator-ns`, and prod uses
+`chaos-generator-prod-ns`. Dev retains the `localhost` ingress host; prod uses
+`prod.localhost` through `ingress-patch.yaml`. Configure host resolution to your
+ingress controller before browsing these endpoints.
 
 The Argo CD Helm values configure:
 
@@ -156,16 +161,14 @@ kubectl kustomize infrastructure/k8s/apps/chaos-generator/kustomize/overlays/pro
 ```
 
 Expect a Service, Deployment, and Ingress, with one Deployment replica for dev
-and three for prod. The Application selects dev by default. To select prod,
-change its `spec.source.path` suffix from `overlays/dev` to `overlays/prod`.
-This switches the existing deployment; running both environments at once needs
-separate Application names and destination namespaces or clusters. The prod
-overlay changes only replica count; it does not configure production ingress,
-resources, or shared application state.
+and three for prod. Each Application points to its matching overlay; there is
+no need to edit dev's source path to select prod. The prod overlay supplies a
+separate ingress host but does not configure production TLS, resource limits,
+or shared application state.
 
-Rendered resources
-leave the namespace to Argo CD; for manual application, supply
-`--namespace chaos-generator-ns` to kubectl and create that namespace first.
+Rendered resources leave the namespace to Argo CD. For manual application,
+supply `--namespace chaos-generator-ns` for dev or
+`--namespace chaos-generator-prod-ns` for prod, and create that namespace first.
 
 Commit and push the chart, Kustomize files, and Application to the repository
 revision Argo CD watches before switching the Application. Update the existing
@@ -176,33 +179,72 @@ using `--version`), then apply the Application:
 helm upgrade argocd argo/argo-cd -n argocd --reuse-values \
   --version <installed-argo-cd-chart-version> \
   -f infrastructure/k8s/platform/argocd/values.yaml
-kubectl apply -f infrastructure/k8s/argocd/applications/kustomize-app.yaml
-kubectl -n argocd get application chaos-generator
+kubectl apply -f infrastructure/k8s/argocd/applications/dev/kustomize-app.yaml
+kubectl apply -f infrastructure/k8s/argocd/applications/prod/kustomize-app.yaml
+kubectl -n argocd get applications chaos-generator-dev chaos-generator-prod
 ```
 
-This guide uses `kustomize-app.yaml`. Both manifests are supported:
+The available Applications are:
 
-- `kustomize-app.yaml` renders the Helm chart through the dev Kustomize overlay.
-- `chaos-app.yaml` points directly to the Helm chart and uses its values without
-  applying Kustomize overlays. This option does not require the Kustomize build flags.
+| Manifest under `infrastructure/k8s/argocd/applications/` | Application | Source | Destination namespace |
+| --- | --- | --- | --- |
+| `dev/kustomize-app.yaml` | `chaos-generator-dev` | Dev overlay | `chaos-generator-ns` |
+| `prod/kustomize-app.yaml` | `chaos-generator-prod` | Prod overlay | `chaos-generator-prod-ns` |
+| `chaos-app.yaml` | `chaos-generator` | Direct Helm | `chaos-generator-ns` |
 
-Both define the same `chaos-generator` Application in the `argocd` namespace,
-so use one at a time. Applying either manifest switches the existing Application
-to that source; do not apply the whole applications directory. To switch to
-direct Helm after committing and pushing the new paths:
+Dev and prod can run together. Direct Helm remains an alternative to dev and
+requires no Kustomize build flags. Direct Helm and dev target the same workloads,
+so do not enable both for that namespace or recursively apply the entire
+applications directory. When migrating from the existing direct Helm Application
+to dev, retire `chaos-generator` without cascading deletion of its workloads
+before enabling `chaos-generator-dev`. Applying the dev manifest creates a new
+Application; it does not rename the old one.
 
-```sh
-kubectl apply -f infrastructure/k8s/argocd/applications/chaos-app.yaml
-```
-
-Reapply `kustomize-app.yaml` to switch back. After moving files from the old layout,
-reapply your chosen manifest so the live Application uses the new source path.
-Automated sync and pruning remain enabled, so Argo CD reconciles once the source
-is available. Both options render Helm templates; neither creates a Helm release.
+After moving files or changing source paths, reapply the relevant manifests.
+If prod was already applied with the old dev path and namespace, check the live
+Application and its resource ownership before changing its destination: automated
+pruning can remove resources it previously managed. Automated sync and pruning
+remain enabled for all three Applications. All options render Helm templates;
+none creates a Helm release.
 
 If rendering reports `must specify --enable-helm` or a file security restriction,
 check `argocd-cm` contains the build options above and hard-refresh the Application
 after updating the configuration.
+
+### GitHub Actions deployment
+
+`.github/workflows/docker-build-push.yaml` updates the image tag in
+`infrastructure/k8s/apps/chaos-generator/chart/values.yaml` and commits it.
+The **Run workflow** form offers a `deployment` choice:
+
+- `dev` (default, also used for pushes): `argocd/applications/dev/kustomize-app.yaml`.
+- `prod`: `argocd/applications/prod/kustomize-app.yaml`.
+- `helm`: `argocd/applications/chaos-app.yaml`.
+
+These paths are under `infrastructure/k8s/`. The workflow selects the file,
+upserts the Application with `argocd app create --file ... --upsert`, then syncs
+its name read from that file. Configure Argo CD's Kustomize build flags before
+using dev or prod, and complete the direct Helm-to-dev ownership migration above
+before the first dev deployment.
+
+Both overlays currently inherit the same image tag from the chart and both
+Applications watch `HEAD` with automated sync. Updating the shared image tag can
+therefore roll out to **both** environments, regardless of which Application the
+workflow explicitly syncs. This selector is not a production promotion gate;
+independent promotion would require environment-specific image tags or revisions.
+
+If a live `chaos-generator` Application still reports `app path does not exist`
+for the old chart directory, commit and push the updated workflow and manifest,
+then run the workflow from the updated branch using **Run workflow** with
+`deployment: helm` to repair that existing direct Helm Application. Changes
+only under `infrastructure/` do not trigger this image build workflow automatically.
+For an immediate repair after the new chart path is pushed, run while logged
+into Argo CD:
+
+```sh
+argocd app create --file infrastructure/k8s/argocd/applications/chaos-app.yaml --upsert
+argocd app sync chaos-generator
+```
 
 ## ArgoCD CLI
 
