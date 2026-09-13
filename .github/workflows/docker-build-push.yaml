@@ -70,7 +70,7 @@ jobs:
         env:
           IMAGE_TAG: ${{ needs.ci.outputs.commit_id }}
         run: |
-          yq -i '.image.tag = strenv(IMAGE_TAG)' infrastructure/k8s/charts/chaos-generator-app/values.yaml
+          yq -i '.image.tag = strenv(IMAGE_TAG)' infrastructure/k8s/apps/chaos-generator/chart/values.yaml
 
       - name: Commit changes with tag
         uses: EndBug/add-and-commit@v9

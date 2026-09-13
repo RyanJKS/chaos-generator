@@ -55,15 +55,32 @@ These tests do not measure production throughput or downstream processing.
 CI installs application and development tools, runs pre-commit, tests, and compilation.
 
 The `check-yaml` hook excludes Helm templates under
-`infrastructure/k8s/charts/*/templates/`, which contain Go template syntax.
+`infrastructure/k8s/apps/*/chart/templates/`, which contain Go template syntax.
 Chart metadata, values files, and plain Kubernetes manifests remain checked,
 including duplicate-key detection. Validate application chart changes separately
 with Helm installed, from the repository root:
 
 ```sh
-helm lint infrastructure/k8s/charts/chaos-generator-app
-helm template chaos-generator infrastructure/k8s/charts/chaos-generator-app
+helm lint infrastructure/k8s/apps/chaos-generator/chart
+helm template chaos-generator infrastructure/k8s/apps/chaos-generator/chart
 ```
+
+## Kubernetes configuration
+
+`infrastructure/k8s/apps/chaos-generator/` keeps the application Helm chart and
+Kustomize base and dev/prod overlays together. Each overlay has a
+`replica-patch.yaml`, setting one replica for dev and three for prod.
+`platform/` holds Argo CD Helm values and
+the GitHub runner deployment. `argocd/applications/kustomize-app.yaml` points to
+the dev overlay and is the option used in the setup guide. `chaos-app.yaml` in
+the same directory is a direct Helm alternative. Both define the same Argo CD
+Application; apply one at a time. `examples/intro/`
+contains standalone learning manifests, outside the active deployment path.
+
+The image publishing workflow updates `apps/chaos-generator/chart/values.yaml`
+under `infrastructure/k8s/`. Kustomize renders that chart before applying overlay
+changes. See the [Argo CD setup guide](local/argocd.md#helm-chart-with-kustomize-overlays)
+for build flags, local validation, and applying the Application.
 
 ## Documentation
 

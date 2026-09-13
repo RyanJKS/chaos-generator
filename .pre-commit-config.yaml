@@ -6,7 +6,7 @@ repos:
       - id: end-of-file-fixer
       - id: check-yaml
         # Helm templates must be rendered before they are valid YAML.
-        exclude: ^infrastructure/k8s/charts/[^/]+/templates/
+        exclude: ^infrastructure/k8s/apps/[^/]+/chart/templates/
       - id: check-merge-conflict
       - id: detect-private-key
       - id: check-added-large-files

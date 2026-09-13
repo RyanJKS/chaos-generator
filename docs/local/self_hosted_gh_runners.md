@@ -147,7 +147,7 @@ kubectl get crd certificates.cert-manager.io issuers.cert-manager.io
 Deploy the runner manifest to new namespace that holds action runner with this command:
 
 ```sh
-kubectl apply -n actions-runner-system -f infrastructure/k8s/github-runner/runnerDeployment.yaml
+kubectl apply -n actions-runner-system -f infrastructure/k8s/platform/github-runner/runner-deployment.yaml
 ```
 
 Runner Deployment manifest:

@@ -8,5 +8,6 @@ nav:
       - Setup: local/self_hosted_gh_runners.md
   - Local setup:
       - KIND cluster: local/kind-setup.md
+      - Argo CD: local/argocd.md
 plugins:
   - techdocs-core
