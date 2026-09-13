@@ -51,3 +51,15 @@ Update the hosts file from `C:\Windows\System32\drivers\etc\hosts` from notepad 
 ```sh
 127.0.0.1       argocd.test.com
 ```
+
+## Get Secrett
+
+```sh
+kubectl get secrets -n <namespace> argocd-initial-admin-secret -o yaml
+kubectl get secrets -n argocd argocd-initial-admin-secret -o yaml
+```
+
+Extract data.password
+```sh
+kubectl get secret argocd-initial-admin-secret -n argocd -o yaml | yq ".data.password"
+```
