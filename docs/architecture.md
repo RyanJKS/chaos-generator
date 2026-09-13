@@ -54,6 +54,17 @@ acceptance, counts, health, and invalid payloads.
 These tests do not measure production throughput or downstream processing.
 CI installs application and development tools, runs pre-commit, tests, and compilation.
 
+The `check-yaml` hook excludes Helm templates under
+`infrastructure/k8s/charts/*/templates/`, which contain Go template syntax.
+Chart metadata, values files, and plain Kubernetes manifests remain checked,
+including duplicate-key detection. Validate application chart changes separately
+with Helm installed, from the repository root:
+
+```sh
+helm lint infrastructure/k8s/charts/chaos-generator-app
+helm template chaos-generator infrastructure/k8s/charts/chaos-generator-app
+```
+
 ## Documentation
 
 `mkdocs.yml` lists published pages and enables `techdocs-core`.

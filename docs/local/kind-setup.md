@@ -16,11 +16,11 @@ nodes:
    extraPortMappings:
    - containerPort: 80
      hostPort: 80
-     protocol: TCP   
+     protocol: TCP
  EOF
 ```
 
-## Install NGINX Ingress Controller 
+## Install NGINX Ingress Controller
 
 ```sh
 kubectl apply -f https://raw.githubusercontent.com/kubernetes/ingress-nginx/main/deploy/static/provider/kind/deploy.yaml
