@@ -249,11 +249,15 @@ argocd app get chaos-generator-dev --hard-refresh
 
 ### GitHub Actions deployment
 
-`.github/workflows/docker-build-push.yaml` updates the image tag in
+`.github/workflows/build-and-deploy.yaml` updates the image tag in
 `infrastructure/k8s/apps/chaos-generator/chart/values.yaml` and commits it.
 Both push and manual runs deploy only the direct Helm Application:
-`infrastructure/k8s/argocd/applications/chaos-app.yaml`. The CD job upserts that
-manifest, then syncs `chaos-generator`. There is no Kustomize deployment selector.
+`infrastructure/k8s/argocd/applications/chaos-app.yaml`. The CD job lists
+registered repositories and applications with the Argo CD CLI and checks for
+exact matches to the manifest’s repository URL and application name. If missing,
+it runs `argocd repo add` or `argocd app create --file` with the manifest before
+syncing. Listing or creation failures stop deployment. Existing applications
+are not updated by these checks. There is no Kustomize deployment selector.
 Kustomize dev/prod overlays and their Application manifests are learning examples
 for manual use; the workflow never creates or syncs them. Helm inflation flags
 are not required for the pipeline's direct Helm deployment.
@@ -263,7 +267,8 @@ no automated sync. A manual render or sync picks up the current tag.
 
 If a live `chaos-generator` Application still reports `app path does not exist`
 for the old chart directory, commit and push the updated workflow and manifest,
-then run the workflow from the updated branch using **Run workflow** to repair that existing direct Helm Application. Changes
+then apply the manifest with the repair commands below before rerunning the
+workflow using **Run workflow**. Changes
 only under `infrastructure/` do not trigger this image build workflow automatically.
 For an immediate repair after the new chart path is pushed, run while logged
 into Argo CD:
@@ -321,7 +326,7 @@ The workflow remains direct Helm by default. To deliberately change it:
    ingress host/path conflicts.
 
 3. **Change the workflow's selected manifest.** In
-   `.github/workflows/docker-build-push.yaml`, replace the CD job's environment
+   `.github/workflows/build-and-deploy.yaml`, replace the CD job's environment
    variable with the dev path:
 
    ```yaml

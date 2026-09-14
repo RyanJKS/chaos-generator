@@ -5,6 +5,7 @@ metadata:
   title: "Chaos Generator"
   annotations:
     backstage.io/techdocs-ref: dir:.
+    github.com/project-slug: RyanJKS/chaos-generator
   description: "Controlled HTTP event traffic for observing systems under load"
 spec:
   type: service
