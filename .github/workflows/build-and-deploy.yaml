@@ -1,4 +1,4 @@
-name: ci-cd
+name: Build and deploy
 
 on:
   workflow_dispatch:
@@ -9,7 +9,7 @@ on:
       - .dockerignore
       - pyproject.toml
       - uv.lock
-      - .github/workflows/docker-build-push.yaml
+      - .github/workflows/build-and-deploy.yaml
     branches:
       - main
 
@@ -95,9 +95,31 @@ jobs:
             --username admin \
             --password ${{ secrets.ARGOCD_PASSWORD }}
 
-      - name: Update ArgoCD Application and sync
+      - name: Ensure ArgoCD repository exists
         shell: bash
         run: |
           set -euo pipefail
+
+          repository_url="$(yq -er '.spec.source.repoURL' "$ARGOCD_APPLICATION_FILE")"
+          repositories="$(argocd repo list -o yaml)"
+
+          printf '%s\n' "$repositories" | yq -r '.[].repo' | grep -Fx -- "$repository_url" || argocd repo add "$repository_url"
+
+      - name: Ensure ArgoCD Application exists
+        shell: bash
+        run: |
+          set -euo pipefail
+
+          application_name="$(yq -er '.metadata.name' "$ARGOCD_APPLICATION_FILE")"
+          applications="$(argocd app list -o yaml)"
+
+          printf '%s\n' "$applications" | yq -r '.[].metadata.name' | grep -Fx -- "$application_name" || argocd app create --file "$ARGOCD_APPLICATION_FILE"
+
+      - name: Sync ArgoCD Application
+        shell: bash
+        run: |
+          set -euo pipefail
+
           application_name="$(yq -er '.metadata.name' "$ARGOCD_APPLICATION_FILE")"
           argocd app sync "$application_name"
+          argocd app wait "$application_name" --timeout 180

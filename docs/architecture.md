@@ -83,8 +83,9 @@ manifests outside the active deployment path.
 
 The image publishing workflow updates `apps/chaos-generator/chart/values.yaml`
 under `infrastructure/k8s/`. Both push and manual runs deploy only the direct
-Helm Application from `argocd/applications/chaos-app.yaml`. The CD job upserts it
-before syncing its name, keeping the live source path aligned with the repository.
+Helm Application from `argocd/applications/chaos-app.yaml`. The CD job checks the registered repository URL and application name with the
+Argo CD CLI, adds the repository or creates the Application if missing, then
+syncs. Existing Applications are not updated by these checks.
 Kustomize dev/prod are learning examples for local rendering/application or manual
 Argo CD sync. Their Application manifests disable automated sync, and the pipeline
 does not deploy them. Both overlays inherit the shared chart image tag when

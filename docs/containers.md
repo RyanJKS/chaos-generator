@@ -30,7 +30,7 @@ updated image tag. Other jobs retain the workflow's `contents: read` permission.
 This grant does not bypass branch protection or repository rulesets; if direct
 pushes are blocked, submit the manifest change through the required pull-request flow.
 
-The `cd` job in `docker-build-push.yaml` installs the pinned Mike Farah `yq`
+The `cd` job in `build-and-deploy.yaml` installs the pinned Mike Farah `yq`
 binary into the runner's temporary directory and adds it to the job's PATH.
 This step requires a Linux x64 runner, `curl`, and access to GitHub release downloads;
 it does not require pip or sudo. The manifest update uses `strenv(IMAGE_TAG)` to
