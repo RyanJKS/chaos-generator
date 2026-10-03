@@ -75,7 +75,7 @@ jobs:
           yq -i '.image.tag = strenv(IMAGE_TAG)' infrastructure/k8s/apps/chaos-generator/chart/values.yaml
 
       - name: Commit changes with tag
-        uses: EndBug/add-and-commit@v9
+        uses: EndBug/add-and-commit@v11
         with:
           message: "Update values.yaml with commit ${{ needs.ci.outputs.commit_id }}"
 
